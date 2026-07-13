@@ -105,8 +105,19 @@ a { color: inherit; text-decoration: none; }
 }
 .btn-outline:hover { border-color: var(--purple); background: var(--blue-tint); }
 .btn-sm { padding: 9px 20px; font-size: .92rem; }
-.navbar .btn-primary { background: #238b4b; }
-.navbar .btn-primary:hover { background: #1d743f; }
+.navbar .btn-primary {
+  background: rgba(35, 139, 75, .18);
+  color: #176737;
+  border-color: rgba(35, 139, 75, .38);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  backdrop-filter: blur(12px) saturate(150%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .72), 0 8px 22px rgba(35, 139, 75, .16);
+}
+.navbar .btn-primary:hover {
+  background: rgba(35, 139, 75, .28);
+  border-color: rgba(35, 139, 75, .55);
+  color: #105c30;
+}
 .btn-block { width: 100%; }
 
 /* ناوبار */
