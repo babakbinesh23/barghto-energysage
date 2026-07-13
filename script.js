@@ -27,6 +27,25 @@ function formatToman(rials) {
   const toman = rials / 10;
   return formatNumber(toman) + ' تومان';
 }
+function easeOutExpo(t) {
+  return t >= 1 ? 1 : 1 - Math.pow(2, -10 * t);
+}
+function animateCalcValue(el, target, formatter) {
+  const reduceMotion = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion) {
+    el.textContent = formatter(target);
+    return;
+  }
+  const duration = 950;
+  const start = performance.now();
+  function tick(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    el.textContent = formatter(target * easeOutExpo(progress));
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
 
 // ------- ماشین‌حساب -------
 const calcForm = document.getElementById('calc-form');
@@ -53,10 +72,23 @@ if (calcForm) {
     const barghtoIncome = guaranteedIncome * CONFIG.BARGHTO_UPLIFT;
     const diff = barghtoIncome - guaranteedIncome;
 
-    document.getElementById('r-production').textContent = formatNumber(annualProduction);
-    document.getElementById('r-guaranteed').textContent = formatToman(guaranteedIncome);
-    document.getElementById('r-barghto').textContent = formatToman(barghtoIncome);
-    document.getElementById('r-diff').textContent = '+ ' + formatToman(diff);
+    const rProduction = document.getElementById('r-production');
+    const rGuaranteed = document.getElementById('r-guaranteed');
+    const rBarghto = document.getElementById('r-barghto');
+    const rDiff = document.getElementById('r-diff');
+
+    animateCalcValue(rProduction, annualProduction, formatNumber);
+    animateCalcValue(rGuaranteed, guaranteedIncome, formatToman);
+    animateCalcValue(rBarghto, barghtoIncome, formatToman);
+    animateCalcValue(rDiff, diff, value => '+ ' + formatToman(value));
+
+    document.querySelectorAll('#calc-results .result-row').forEach(function (row, i) {
+      row.classList.remove('result-pop', 'diff-pulse');
+      void row.offsetWidth;
+      row.style.animationDelay = (i * 0.08) + 's';
+      row.classList.add('result-pop');
+      if (row.classList.contains('diff')) row.classList.add('diff-pulse');
+    });
   });
 }
 
@@ -145,7 +177,7 @@ if (lead) {
         lead.querySelectorAll('input, select, button').forEach(el => el.setAttribute('disabled', 'disabled'));
         const success = document.getElementById('lead-success');
         success.hidden = false;
-        success.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        success.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
       }
 
       // نمایش کوتاه حالت «در حال ارسال» پیش از پیام موفقیت
@@ -174,11 +206,6 @@ function animateCounter(el) {
 
   const duration = 1700;
   const start = performance.now();
-
-  // easing نرم‌تر: easeOutExpo — شتاب اولیه سریع و توقف بسیار نرم
-  function easeOutExpo(t) {
-    return t >= 1 ? 1 : 1 - Math.pow(2, -10 * t);
-  }
 
   function tick(now) {
     const progress = Math.min((now - start) / duration, 1);
