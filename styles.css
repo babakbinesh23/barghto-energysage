@@ -105,6 +105,8 @@ a { color: inherit; text-decoration: none; }
 }
 .btn-outline:hover { border-color: var(--purple); background: var(--blue-tint); }
 .btn-sm { padding: 9px 20px; font-size: .92rem; }
+.navbar .btn-primary { background: var(--green-dark); }
+.navbar .btn-primary:hover { background: #2f8f55; }
 .btn-block { width: 100%; }
 
 /* ناوبار */
