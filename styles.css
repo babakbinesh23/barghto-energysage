@@ -64,6 +64,35 @@ a { color: inherit; text-decoration: none; }
   transition: transform .2s ease, background .2s ease, color .2s ease, border-color .2s ease;
 }
 .btn:active { transform: translateY(1px); }
+/* موج تعاملی (ripple) روی دکمه‌ها */
+.btn { position: relative; overflow: hidden; }
+.btn .ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .45);
+  transform: scale(0);
+  animation: ripple .6s ease-out;
+  pointer-events: none;
+}
+@keyframes ripple {
+  to { transform: scale(4); opacity: 0; }
+}
+/* حالت در حال ارسال دکمه (اسپینر) */
+.btn.is-loading { color: transparent !important; pointer-events: none; }
+.btn.is-loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2.5px solid rgba(255, 255, 255, .45);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: btnSpin .7s linear infinite;
+}
+@keyframes btnSpin { to { transform: rotate(360deg); } }
 .btn-primary {
   background: var(--orange);
   color: #fff;
@@ -154,13 +183,27 @@ a { color: inherit; text-decoration: none; }
   fill: #fff;
 }
 .flow-t-sm { font-size: 12.5px; font-weight: 700; opacity: .95; }
+/* جریان روی خطوط چین‌دار + ظاهرشدن مرحله‌ای هنگام بارگذاری */
 .flow-links path, .flow-link-main {
   stroke-dashoffset: 0;
-  animation: flowDash 1.1s linear infinite;
+  animation: flowDash 1.1s linear infinite,
+             svgAppear .5s ease .55s both;
 }
 @keyframes flowDash { to { stroke-dashoffset: -26; } }
-.solar-plant { animation: plantGlow 3.2s ease-in-out infinite; }
+@keyframes svgAppear { from { opacity: 0; } to { opacity: 1; } }
+
+/* ورود مرحله‌ای اجزای دیاگرام: نیروگاه‌ها → خطوط → هاب → بازار */
+@keyframes svgDropIn {
+  from { opacity: 0; transform: translateY(-14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.solar-plant {
+  animation: svgDropIn .6s cubic-bezier(.2, .7, .2, 1) both,
+             plantGlow 3.2s ease-in-out .6s infinite;
+}
 @keyframes plantGlow { 0%, 100% { opacity: 1; } 50% { opacity: .84; } }
+.flow-node-hub    { animation: svgDropIn .6s cubic-bezier(.2, .7, .2, 1) .35s both; }
+.flow-node-market { animation: svgDropIn .6s cubic-bezier(.2, .7, .2, 1) .7s both; }
 
 /* سکشن عمومی */
 .section { padding: 84px 0; }
@@ -429,9 +472,18 @@ input.invalid, select.invalid { border-color: #dc2626; }
 .faq-a {
   max-height: 0;
   overflow: hidden;
-  transition: max-height .3s ease;
+  opacity: 0;
+  transition: max-height .4s cubic-bezier(.2, .7, .2, 1),
+              opacity .35s ease;
 }
-.faq-a p { padding: 0 22px 20px; color: var(--muted); }
+.faq-item.open .faq-a { opacity: 1; }
+.faq-a p {
+  padding: 0 22px 20px;
+  color: var(--muted);
+  transform: translateY(-8px);
+  transition: transform .4s cubic-bezier(.2, .7, .2, 1);
+}
+.faq-item.open .faq-a p { transform: translateY(0); }
 
 .faq-cta { text-align: center; margin-top: 36px; }
 
@@ -495,11 +547,24 @@ input.invalid, select.invalid { border-color: #dc2626; }
 .video-placeholder:hover { transform: translateY(-6px) scale(1.01); box-shadow: var(--shadow-lg); }
 
 @media (prefers-reduced-motion: reduce) {
-  .reveal, .reveal-stagger > *, .flow-links path, .flow-link-main, .solar-plant { transition: none; animation: none; }
+  .reveal, .reveal-stagger > *,
+  .flow-links path, .flow-link-main, .solar-plant,
+  .flow-node-hub, .flow-node-market {
+    transition: none;
+    animation: none;
+  }
   .reveal, .reveal-stagger > * { opacity: 1; transform: none; }
+  /* اجزای دیاگرام هیرو در حالت نهایی و ثابت */
+  .flow-links path, .flow-link-main,
+  .solar-plant, .flow-node-hub, .flow-node-market { opacity: 1; transform: none; }
   .scroll-progress { display: none; }
   html { scroll-behavior: auto; }
   .stat-card:hover, .flow-diagram:hover, .faq-item:hover, .video-placeholder:hover { transform: none; }
+  /* غیرفعال‌سازی ریز-انیمیشن‌های جدید */
+  .btn .ripple { display: none; }
+  .btn.is-loading::after { animation: none; }
+  .faq-a { transition: none; }
+  .faq-a p { transition: none; transform: none; }
 }
 
 /* ریسپانسیو */

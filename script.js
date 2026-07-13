@@ -136,9 +136,25 @@ if (lead) {
     else setError('l-status', '');
 
     if (valid) {
-      lead.querySelectorAll('input, select, button').forEach(el => el.setAttribute('disabled', 'disabled'));
-      document.getElementById('lead-success').hidden = false;
-      document.getElementById('lead-success').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const submitBtn = lead.querySelector('button[type="submit"]');
+      const reduce = window.matchMedia &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function finish() {
+        if (submitBtn) submitBtn.classList.remove('is-loading');
+        lead.querySelectorAll('input, select, button').forEach(el => el.setAttribute('disabled', 'disabled'));
+        const success = document.getElementById('lead-success');
+        success.hidden = false;
+        success.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      // نمایش کوتاه حالت «در حال ارسال» پیش از پیام موفقیت
+      if (reduce) {
+        finish();
+      } else {
+        if (submitBtn) submitBtn.classList.add('is-loading');
+        setTimeout(finish, 900);
+      }
     }
   });
 }
@@ -147,12 +163,26 @@ if (lead) {
 function animateCounter(el) {
   const target = parseFloat(el.dataset.target);
   const suffix = el.dataset.suffix || '';
-  const duration = 1400;
+  const reduceMotion = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // در حالت کاهش حرکت، عدد نهایی بدون انیمیشن نمایش داده می‌شود
+  if (reduceMotion) {
+    el.textContent = toFa(Math.round(target).toLocaleString('en-US')) + suffix;
+    return;
+  }
+
+  const duration = 1700;
   const start = performance.now();
+
+  // easing نرم‌تر: easeOutExpo — شتاب اولیه سریع و توقف بسیار نرم
+  function easeOutExpo(t) {
+    return t >= 1 ? 1 : 1 - Math.pow(2, -10 * t);
+  }
 
   function tick(now) {
     const progress = Math.min((now - start) / duration, 1);
-    const eased = 1 - Math.pow(1 - progress, 3);
+    const eased = easeOutExpo(progress);
     const current = Math.round(target * eased);
     el.textContent = toFa(current.toLocaleString('en-US')) + suffix;
     if (progress < 1) requestAnimationFrame(tick);
@@ -341,4 +371,26 @@ if (statNumbers.length && 'IntersectionObserver' in window) {
   } else {
     requestAnimationFrame(draw);
   }
+})();
+
+// ------- موج تعاملی (ripple) روی دکمه‌ها -------
+(function () {
+  const reduceMotion = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion) return;
+
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.btn');
+    if (!btn || btn.classList.contains('is-loading')) return;
+
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple';
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+    ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+    btn.appendChild(ripple);
+    ripple.addEventListener('animationend', function () { ripple.remove(); });
+  });
 })();
